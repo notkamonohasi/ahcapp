@@ -1,0 +1,23 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-ahcappfrontend-dev-8a4f6-authRole",
+      "UnauthRoleArn": "arn:aws:iam::058264400349:role/amplify-ahcappfrontend-dev-8a4f6-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::058264400349:role/amplify-ahcappfrontend-dev-8a4f6-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-ahcappfrontend-dev-8a4f6-deployment",
+      "UnauthRoleName": "amplify-ahcappfrontend-dev-8a4f6-unauthRole",
+      "StackName": "amplify-ahcappfrontend-dev-8a4f6",
+      "StackId": "arn:aws:cloudformation:us-east-1:058264400349:stack/amplify-ahcappfrontend-dev-8a4f6/d0e1c140-2e1d-11ef-9053-0ec4b5c1d419",
+      "AmplifyAppId": "d2cfofc9ngi8as"
+    },
+    "categories": {
+      "auth": {
+        "ahcappfrontend458c5a81": {}
+      },
+      "storage": {
+        "ahcapp": {}
+      }
+    }
+  }
+}

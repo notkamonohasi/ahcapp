@@ -1,0 +1,12 @@
+{
+  "resourceName": "ahcapp",
+  "policyUUID": "3806475d",
+  "bucketName": "ahcapp",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {}
+}
