@@ -2,11 +2,14 @@
   "resourceName": "ahcapp",
   "policyUUID": "3806475d",
   "bucketName": "ahcapp",
-  "storageAccess": "auth",
-  "guestAccess": [],
-  "authAccess": [
-    "CREATE_AND_UPDATE"
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "CREATE_AND_UPDATE",
+    "READ"
   ],
-  "triggerFunction": "NONE",
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ"
+  ],
   "groupAccess": {}
 }
