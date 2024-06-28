@@ -4,6 +4,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Loader from "react-spinners/BeatLoader";
 import awsmobile from "../aws-exports";
+import BasicTable from "../components/BasicTable";
 import "./style.css";
 import * as utils from "./utils";
 
@@ -27,6 +28,7 @@ function CodeTest() {
   const [isCodeUploaded, setIsCodeUploaded] = useState<boolean>(false);
   const [isInUploaded, setIsInUploaded] = useState<boolean>(false);
   const [isTesterUploaded, setIsTesterUploaded] = useState<boolean>(false);
+  const [scores, setScores] = useState<number[] | undefined>();
 
   const handleInUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsInUploading(true);
@@ -152,6 +154,7 @@ function CodeTest() {
       })
       .then((result) => {
         console.log(result);
+        setScores(result!.data.scores!);
         return result;
       });
     setIsCalculating(false);
@@ -160,24 +163,41 @@ function CodeTest() {
   return (
     <Box
       sx={{
+        minWidth: "800px",
         display: "flex",
         flexDirection: "column",
+        border: "1px dashed grey",
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "row" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          border: "1px dashed grey",
+        }}
+      >
         <Box
           sx={{
             textAlign: "center",
-            margin: "5%",
+            width: "33.33%",
             display: "flex",
             flexDirection: "column",
+            border: "1px dashed grey",
           }}
         >
           <Typography variant="h6" gutterBottom>
             Code
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <Button variant="contained" component="label" sx={{ margin: "2%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              padding: "5%",
+              border: "1px dashed grey",
+            }}
+          >
+            <Button variant="contained" component="label" sx={{}}>
               UPLOAD
               <input
                 type="file"
@@ -192,16 +212,32 @@ function CodeTest() {
         <Box
           sx={{
             textAlign: "center",
-            margin: "5%",
+            width: "33.33%",
             display: "flex",
             flexDirection: "column",
+            border: "1px dashed grey",
           }}
         >
           <Typography variant="h6" gutterBottom>
             TestCase
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <Button variant="contained" component="label" sx={{ margin: "2%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: "5%",
+              padding: "5%",
+              border: "1px dashed grey",
+            }}
+          >
+            <Button
+              variant="contained"
+              component="label"
+              sx={{
+                flex: 1,
+              }}
+            >
               {isInUploading ? <Loader /> : "UPLOAD"}
               <input
                 type="file"
@@ -219,7 +255,6 @@ function CodeTest() {
               component="label"
               sx={{
                 flex: 1,
-                margin: "2%",
               }}
               onClick={() => {
                 alert("未対応");
@@ -234,21 +269,28 @@ function CodeTest() {
           sx={{
             display: "flex",
             textAlign: "center",
-            margin: "5%",
+            width: "33.33%",
             flexDirection: "column",
+            border: "1px dashed grey",
           }}
         >
           <Typography variant="h6" gutterBottom>
             Tester
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: "5%",
+              padding: "5%",
+              border: "1px dashed grey",
+            }}
+          >
             <Button
               variant="contained"
               component="label"
-              sx={{
-                flex: 1,
-                margin: "2%",
-              }}
+              sx={{ flex: 1 }}
               disabled={isTesterUploading}
             >
               Upload
@@ -262,10 +304,7 @@ function CodeTest() {
             <Button
               variant="contained"
               component="label"
-              sx={{
-                flex: 1,
-                margin: "2%",
-              }}
+              sx={{ flex: 1 }}
               onClick={handleTesterDownload}
               disabled={!isTesterUploaded}
             >
@@ -294,6 +333,7 @@ function CodeTest() {
           {isCalculating ? <Loader /> : "start"}
         </Button>
       </Box>
+      {scores ? <BasicTable scores={scores!} /> : ""}
     </Box>
   );
 }
