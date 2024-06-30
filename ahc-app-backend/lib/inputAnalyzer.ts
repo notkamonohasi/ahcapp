@@ -6,7 +6,12 @@ import { config } from "./config";
 import { createLambdaFunctionFromAsset } from "./createLambda";
 
 export class InputAnalyzer extends Construct {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    api: apigateway.RestApi,
+    props?: cdk.StackProps
+  ) {
     super(scope, id);
 
     const lambdaFunction = createLambdaFunctionFromAsset(
@@ -17,14 +22,12 @@ export class InputAnalyzer extends Construct {
       "develop"
     );
 
-    const api = new apigateway.RestApi(this, "InputAnalyzerApi", {
-      defaultCorsPreflightOptions: {
-        allowOrigins: ["*"],
-      },
-    });
-    const apiKey = api.addApiKey("InputAnalyzerApiKey");
     const resource = api.root.addResource("InputAnalyzer");
-    resource.addMethod("GET", new apigateway.LambdaIntegration(lambdaFunction));
+    resource.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(lambdaFunction),
+      { apiKeyRequired: true }
+    );
 
     const bucket = s3.Bucket.fromBucketName(this, "Bucket", config.bucketName);
     bucket.grantReadWrite(lambdaFunction);

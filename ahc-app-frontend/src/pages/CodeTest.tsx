@@ -9,10 +9,10 @@ import "./style.css";
 import { AnyObject } from "./type";
 import * as utils from "./utils";
 
-const calculationUrl = process.env.REACT_APP_CALCUlATION_URL!;
-const calculationKey = process.env.REACT_APP_CALCULATION_KEY!;
-const inputAnalyzerUrl = process.env.REACT_APP_INPUT_ANALYZER_URL!;
-const inputAnalyzerKey = process.env.REACT_APP_INPUT_ANALYZER_KEY!;
+const ApiUrl = process.env.REACT_APP_API_URL!;
+const ApiKey = process.env.REACT_APP_API_KEY!;
+const calculationUrl = `${ApiUrl}/Exec`;
+const inputAnalyzerUrl = `${ApiUrl}/InputAnalyzer`;
 
 function CodeTest() {
   const queryParams = new URLSearchParams(window.location.search);
@@ -229,7 +229,7 @@ function CodeTest() {
     setIsCalculating(true);
     const result = await axios
       .get(calculationUrl, {
-        headers: { "x-api-key": calculationKey },
+        headers: { "x-api-key": ApiKey },
         params: { bucketName, codePath, inPath, testerPath, testSize },
       })
       .catch((error) => {
@@ -278,9 +278,10 @@ function CodeTest() {
 
   const handleExecInputAnalyze = async () => {
     setIsInputAnalyzing(true);
+    console.log(inputAnalyzerUrl, ApiKey);
     const result = await axios
       .get(inputAnalyzerUrl, {
-        headers: { "x-api-key": inputAnalyzerKey },
+        headers: { "x-api-key": ApiKey },
         params: {
           bucketName,
           inPath,

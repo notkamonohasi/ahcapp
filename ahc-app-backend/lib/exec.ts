@@ -11,6 +11,7 @@ export class Exec extends Construct {
     scope: Construct,
     id: string,
     arns: string[],
+    api: apigateway.RestApi,
     props?: cdk.StackProps
   ) {
     super(scope, id);
@@ -24,14 +25,12 @@ export class Exec extends Construct {
       "develop"
     );
 
-    const api = new apigateway.RestApi(this, "ExecApi", {
-      defaultCorsPreflightOptions: {
-        allowOrigins: ["*"],
-      },
-    });
-    const apiKey = api.addApiKey("ExecApiKey");
     const resource = api.root.addResource("Exec");
-    resource.addMethod("GET", new apigateway.LambdaIntegration(lambdaFunction));
+    resource.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(lambdaFunction),
+      { apiKeyRequired: true }
+    );
 
     const bucket = s3.Bucket.fromBucketName(this, "Bucket", config.bucketName);
     bucket.grantReadWrite(lambdaFunction);
