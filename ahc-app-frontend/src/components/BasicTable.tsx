@@ -6,6 +6,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import React from "react";
+import { AnyObject } from "../pages/type";
 
 function createData(
   name: string,
@@ -39,8 +40,9 @@ function* enumerate<T>(array: T[]): Generator<[number, T], void, unknown> {
   }
 }
 
-const BasicTable: React.FC<{ scores: number[] }> = ({ scores }) => {
-  const row_size = scores.length;
+const BasicTable: React.FC<{ values: AnyObject[] }> = ({ values }) => {
+  console.log(values);
+  const keys = Object.keys(values[0]);
 
   return (
     <TableContainer component={Paper}>
@@ -48,11 +50,13 @@ const BasicTable: React.FC<{ scores: number[] }> = ({ scores }) => {
         <TableHead>
           <TableRow>
             <TableCell>TestCase</TableCell>
-            <TableCell align="right">Score</TableCell>
+            {keys.map((key) => (
+              <TableCell align="right">{key}</TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
-          {scores.map((score, index) => (
+          {values.map((value, index) => (
             <TableRow
               key={index}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -60,7 +64,9 @@ const BasicTable: React.FC<{ scores: number[] }> = ({ scores }) => {
               <TableCell component="th" scope="row">
                 {index}
               </TableCell>
-              <TableCell align="right">{score}</TableCell>
+              {keys.map((key) => (
+                <TableCell align="right">{value[key]}</TableCell>
+              ))}
             </TableRow>
           ))}
         </TableBody>
