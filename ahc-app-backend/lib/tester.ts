@@ -3,7 +3,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 import { config } from "./config";
-import { createLambdaFunction } from "./createLambda";
+import { createLambdaFunctionFromDocker } from "./createLambda";
 
 export class Tester extends Construct {
   readonly testerFunctionArn: string;
@@ -11,7 +11,8 @@ export class Tester extends Construct {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id);
 
-    const lambdaFunction = createLambdaFunction(
+    // C++の環境が必要
+    const lambdaFunction = createLambdaFunctionFromDocker(
       this,
       "Tester",
       1024,

@@ -3,13 +3,13 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { config } from "./config";
-import { createLambdaFunction } from "./createLambda";
+import { createLambdaFunctionFromAsset } from "./createLambda";
 
 export class InputAnalyzer extends Construct {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id);
 
-    const lambdaFunction = createLambdaFunction(
+    const lambdaFunction = createLambdaFunctionFromAsset(
       this,
       "InputAnalyzer",
       1024,

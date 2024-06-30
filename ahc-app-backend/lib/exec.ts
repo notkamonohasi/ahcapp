@@ -4,7 +4,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { config } from "./config";
-import { createLambdaFunction } from "./createLambda";
+import { createLambdaFunctionFromDocker } from "./createLambda";
 
 export class Exec extends Construct {
   constructor(
@@ -15,7 +15,8 @@ export class Exec extends Construct {
   ) {
     super(scope, id);
 
-    const lambdaFunction = createLambdaFunction(
+    // C++をコンパイルするため、g++が必要
+    const lambdaFunction = createLambdaFunctionFromDocker(
       this,
       "Exec",
       1024,
