@@ -7,7 +7,11 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-container">
-        <h1>AHC CodeTest</h1>
+        <h1>
+          <a style={{ textDecoration: "none", color: "black" }} href="/">
+            CodeTest
+          </a>
+        </h1>
         <nav>
           <ul className="header-ul">
             <li className="header-li">

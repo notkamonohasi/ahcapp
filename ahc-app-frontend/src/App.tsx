@@ -1,4 +1,4 @@
-import CodeTest from "./pages/CodeTest";
+import CodeTestHome from "./pages/codeTest/Home";
 import Header from "./pages/Header";
 import Home from "./pages/Home";
 import "./pages/style.css";
@@ -11,7 +11,7 @@ function Router() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/codetest" element={<CodeTest />} />
+        <Route path="/codetest" element={<CodeTestHome />} />
       </Routes>
     </BrowserRouter>
   );

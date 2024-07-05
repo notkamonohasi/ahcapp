@@ -3,18 +3,18 @@ import * as Storage from "aws-amplify/storage";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Loader from "react-spinners/BeatLoader";
-import awsmobile from "../aws-exports";
-import BasicTable from "../components/BasicTable";
-import "./style.css";
-import { AnyObject } from "./type";
-import * as utils from "./utils";
+import awsmobile from "../../aws-exports";
+import BasicTable from "../../components/BasicTable";
+import "../style.css";
+import { AnyObject } from "../type";
+import * as utils from "../utils";
 
 const ApiUrl = process.env.REACT_APP_API_URL!;
 const ApiKey = process.env.REACT_APP_API_KEY!;
 const calculationUrl = `${ApiUrl}/Exec`;
 const inputAnalyzerUrl = `${ApiUrl}/InputAnalyzer`;
 
-function CodeTest() {
+function CodeTestExecutor() {
   const queryParams = new URLSearchParams(window.location.search);
   const contestName = queryParams.get("contest")!;
   const contestPath = `${utils.contestsPath}/${contestName}`;
@@ -304,7 +304,7 @@ function CodeTest() {
   return (
     <Box
       sx={{
-        minWidth: "800px",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
         border: "1px dashed grey",
@@ -346,7 +346,8 @@ function CodeTest() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                padding: "5%",
+                paddingLeft: "10%",
+                paddingRight: "10%",
                 border: "1px dashed grey",
               }}
             >
@@ -402,7 +403,8 @@ function CodeTest() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                padding: "5%",
+                paddingLeft: "10%",
+                paddingRight: "10%",
                 border: "1px dashed grey",
               }}
             >
@@ -449,7 +451,8 @@ function CodeTest() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                padding: "5%",
+                paddingLeft: "10%",
+                paddingRight: "10%",
                 border: "1px dashed grey",
               }}
             >
@@ -642,4 +645,4 @@ function CodeTest() {
   );
 }
 
-export default CodeTest;
+export default CodeTestExecutor;
