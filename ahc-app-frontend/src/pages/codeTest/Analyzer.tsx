@@ -1,3 +1,4 @@
+import { Loader } from "@aws-amplify/ui-react";
 import { Box } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import csvtojson from "csvtojson";
@@ -51,7 +52,11 @@ function ResultAnalyzer() {
   };
 
   if (isAllResultDownloding) {
-    return <>jo</>;
+    return (
+      <Box sx={{ width: "100%", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
   } else {
     return (
       <Box sx={{ width: "100%" }}>

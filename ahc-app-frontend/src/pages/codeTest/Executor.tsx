@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill";
 import { Box, Button, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
@@ -25,6 +26,7 @@ function CodeTestExecutor() {
   const testerPath = `${contestPath}/tester.py`;
   const inputAnalyzerPath = `${contestPath}/inputAnalyzer.py`;
   const inputAnalyzeResultPath = `${contestPath}/inputAnalyzeResult.json`;
+  const targetResultScorePath = `${contestPath}/targetResultScore.json`;
   const allResultPath = `${contestPath}/allResult.csv`;
   const testSize = 10;
 
@@ -40,7 +42,11 @@ function CodeTestExecutor() {
   const [isTesterUploaded, setIsTesterUploaded] = useState<boolean>(false);
   const [isInputAnalyzerUploaded, setIsInputAnalyzerUploaded] =
     useState<boolean>(false);
+  const [isResultSaving, setIsResultSaving] = useState<boolean>(false);
+  const [isTargetResultSaving, setIsTargetResultSaving] =
+    useState<boolean>(false);
   const [scores, setScores] = useState<number[] | undefined>();
+  const [targetScores, setTargetScores] = useState<number[] | undefined>();
   const [inputAnalyzeResults, setInputAnalyzeResults] = useState<
     AnyObject[] | undefined
   >();
@@ -227,6 +233,22 @@ function CodeTestExecutor() {
     handleInputAnalyzeResultDownload();
   }, []);
 
+  const handleTargetScoreDownload = async () => {
+    try {
+      const { body, eTag } = await Storage.downloadData({
+        path: targetResultScorePath,
+      }).result;
+      const result = await JSON.parse(await body.text());
+      console.log(result["data"]);
+      setTargetScores(result["data"]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    handleTargetScoreDownload();
+  }, []);
+
   const handleCalculation = async () => {
     setIsCalculating(true);
     const result = await axios
@@ -268,7 +290,10 @@ function CodeTestExecutor() {
           }
         });
       }
+
+      if (targetScores && targetScores.length > i) one["Baseline"] = scores[i];
       one["Score"] = scores[i];
+
       result = [...result, one];
     }
 
@@ -301,6 +326,66 @@ function CodeTestExecutor() {
     setIsInputAnalyzing(false);
     await handleInputAnalyzeResultDownload();
     console.log(inputAnalyzeResults);
+  };
+
+  const handleSaveResult = async () => {
+    setIsResultSaving(true);
+    console.log(scores);
+
+    const japanTime =
+      Temporal.Now.zonedDateTimeISO("UTC").withTimeZone("Asia/Tokyo");
+    const formattedJapanTime = `${String(japanTime.month).padStart(
+      2,
+      "0"
+    )}-${String(japanTime.day).padStart(2, "0")} ${String(
+      japanTime.hour
+    ).padStart(2, "0")}:${String(japanTime.minute).padStart(2, "0")}:${String(
+      japanTime.second
+    ).padStart(2, "0")}`;
+    console.log(formattedJapanTime);
+    await axios
+      .post(
+        resultHandlerUrl,
+        {
+          bucketName,
+          inputAnalyzeResultPath,
+          allResultPath,
+          scores: scores,
+          colName: formattedJapanTime,
+        },
+        {
+          headers: { "x-api-key": ApiKey },
+        }
+      )
+      .catch((error) => {
+        console.log(error);
+      })
+      .then((result) => {
+        console.log(result);
+        return result;
+      });
+    setIsResultSaving(false);
+  };
+
+  const handleSaveTargetResult = async () => {
+    setIsTargetResultSaving(true);
+    try {
+      const jsonString = JSON.stringify({ data: scores! });
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const file = new File([blob], "targetScore.json", {
+        type: "application/json",
+      });
+      const result = await Storage.uploadData({
+        path: targetResultScorePath,
+        data: file,
+      }).result;
+      console.log(result);
+      console.log("code upload done");
+      setIsCodeUploaded(true);
+    } catch (error) {
+      console.log(error);
+    }
+    setIsTargetResultSaving(false);
   };
 
   return (
@@ -633,49 +718,51 @@ function CodeTestExecutor() {
         </Typography>
         <Box
           sx={{
+            width: "50%",
+            display: "flex",
+            border: "1px dashed green",
+            paddingLeft: "5%",
+            gap: "10%",
+          }}
+        >
+          {mergedResult ? (
+            <>
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  flex: 1,
+                }}
+                onClick={handleSaveResult}
+              >
+                {isResultSaving ? <Loader /> : "save"}
+              </Button>
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  flex: 1,
+                }}
+                onClick={handleSaveTargetResult}
+              >
+                {isTargetResultSaving ? <Loader /> : "save as target"}
+              </Button>
+            </>
+          ) : undefined}
+        </Box>
+        <Box
+          sx={{
             width: "100%",
             display: "flex",
             border: "1px dashed green",
             paddingLeft: "5%",
             paddingRight: "5%",
+            paddingTop: "5px",
+            paddingBottom: "20px",
           }}
         >
           {mergedResult ? <BasicTable values={mergedResult!} /> : ""}
         </Box>
-        <Button
-          variant="contained"
-          component="label"
-          sx={{
-            flex: 1,
-          }}
-          onClick={async () => {
-            const colName = "harinezumi";
-            console.log(scores);
-            const result = await axios
-              .post(
-                resultHandlerUrl,
-                {
-                  bucketName,
-                  inputAnalyzeResultPath,
-                  allResultPath,
-                  scores: scores,
-                  colName,
-                },
-                {
-                  headers: { "x-api-key": ApiKey },
-                }
-              )
-              .catch((error) => {
-                console.log(error);
-              })
-              .then((result) => {
-                console.log(result);
-                return result;
-              });
-          }}
-        >
-          保存
-        </Button>
       </Box>
     </Box>
   );
