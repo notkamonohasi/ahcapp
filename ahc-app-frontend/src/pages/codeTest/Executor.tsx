@@ -13,6 +13,7 @@ const ApiUrl = process.env.REACT_APP_API_URL!;
 const ApiKey = process.env.REACT_APP_API_KEY!;
 const calculationUrl = `${ApiUrl}/Exec`;
 const inputAnalyzerUrl = `${ApiUrl}/InputAnalyzer`;
+const resultHandlerUrl = `${ApiUrl}/ResultHandler`;
 
 function CodeTestExecutor() {
   const queryParams = new URLSearchParams(window.location.search);
@@ -24,6 +25,7 @@ function CodeTestExecutor() {
   const testerPath = `${contestPath}/tester.py`;
   const inputAnalyzerPath = `${contestPath}/inputAnalyzer.py`;
   const inputAnalyzeResultPath = `${contestPath}/inputAnalyzeResult.json`;
+  const allResultPath = `${contestPath}/allResult.csv`;
   const testSize = 10;
 
   const [isInUploading, setIsInUploading] = useState<boolean>(false);
@@ -640,6 +642,40 @@ function CodeTestExecutor() {
         >
           {mergedResult ? <BasicTable values={mergedResult!} /> : ""}
         </Box>
+        <Button
+          variant="contained"
+          component="label"
+          sx={{
+            flex: 1,
+          }}
+          onClick={async () => {
+            const colName = "harinezumi";
+            console.log(scores);
+            const result = await axios
+              .post(
+                resultHandlerUrl,
+                {
+                  bucketName,
+                  inputAnalyzeResultPath,
+                  allResultPath,
+                  scores: scores,
+                  colName,
+                },
+                {
+                  headers: { "x-api-key": ApiKey },
+                }
+              )
+              .catch((error) => {
+                console.log(error);
+              })
+              .then((result) => {
+                console.log(result);
+                return result;
+              });
+          }}
+        >
+          保存
+        </Button>
       </Box>
     </Box>
   );

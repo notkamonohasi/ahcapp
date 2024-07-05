@@ -37,7 +37,7 @@ export const createLambdaFunctionFromAsset = (
   memorySize: number,
   timeout: number,
   environment: string
-): lambda.DockerImageFunction => {
+): lambda.Function => {
   return new lambda.Function(scope, `${dirName}Function`, {
     functionName: dirName,
     runtime: lambda.Runtime.PYTHON_3_10,

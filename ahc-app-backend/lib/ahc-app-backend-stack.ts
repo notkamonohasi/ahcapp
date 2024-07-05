@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { createApi } from "./createApi";
 import { Exec } from "./exec";
 import { InputAnalyzer } from "./inputAnalyzer";
+import { ResuleHandler } from "./resuletHandler";
 import { Tester } from "./tester";
 
 export class AhcAppBackendStack extends cdk.Stack {
@@ -19,5 +20,6 @@ export class AhcAppBackendStack extends cdk.Stack {
       props
     );
     const inputAnalyzer = new InputAnalyzer(this, "InputAnalyzer", api, props);
+    const resultHandler = new ResuleHandler(this, "ResultHandler", api, props);
   }
 }

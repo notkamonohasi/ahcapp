@@ -2,12 +2,9 @@ import { faChartLine, faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import ResultAnalyzer from "./Analyzer";
 import CodeTestExecutor from "./Executor";
-
-const CodeTest = () => <CodeTestExecutor />;
-const ResultAnalyzer = () => <Typography>プルリクエストコンテンツ</Typography>;
 
 function CodeTestHome() {
   const [selectedTab, setSelectedTab] = useState("CodeTest");
@@ -15,7 +12,7 @@ function CodeTestHome() {
   const renderContent = () => {
     switch (selectedTab) {
       case "CodeTest":
-        return <CodeTest />;
+        return <CodeTestExecutor />;
       case "ResultAnalyzer":
         return <ResultAnalyzer />;
     }
