@@ -7,20 +7,50 @@ import BasicTable from "../../components/BasicTable";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
+import AnalyzerModal from "./Modal";
+import { Commit } from "./type";
 
-const ApiUrl = process.env.REACT_APP_API_URL!;
-const ApiKey = process.env.REACT_APP_API_KEY!;
+export interface CommitObject {
+  [key: string]: Commit;
+}
 
 function ResultAnalyzer() {
   const queryParams = new URLSearchParams(window.location.search);
   const contestName = queryParams.get("contest")!;
   const contestPath = `${utils.contestsPath}/${contestName}`;
   const allResultPath = `${contestPath}/allResult.csv`;
+  const commitPath = `${contestPath}/commit.json`;
 
   const [allResult, setAllResult] = useState<string | undefined>();
   const [allResultJson, setAllResultJson] = useState<AnyObject[] | undefined>();
   const [isAllResultDownloding, setIsAllResultDownloding] =
     useState<boolean>(false);
+  const [commits, setCommits] = useState<CommitObject | undefined>();
+  const [commit, setCommit] = useState<Commit | undefined>();
+  const [targetColumns, setTargetColumns] = useState<string[] | undefined>();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const downloadCommit = async () => {
+    var tmpCommits: CommitObject | undefined;
+    try {
+      const { body, eTag } = await Storage.downloadData({
+        path: commitPath,
+      }).result;
+      console.log(await body.text());
+      tmpCommits = await JSON.parse(await body.text());
+      console.log(tmpCommits);
+    } catch (error) {
+      console.log(error);
+    }
+
+    setCommits(tmpCommits);
+    console.log(Object.keys(tmpCommits!));
+    setTargetColumns(Object.keys(tmpCommits!));
+    console.log(targetColumns);
+  };
+  useEffect(() => {
+    downloadCommit();
+  }, []);
 
   const downloadAllResult = async () => {
     setIsAllResultDownloding(true);
@@ -60,7 +90,23 @@ function ResultAnalyzer() {
   } else {
     return (
       <Box sx={{ width: "100%" }}>
-        {allResult ? <BasicTable values={allResultJson!} /> : ""}
+        <AnalyzerModal
+          isOpen={isModalOpen}
+          setIsOpen={setIsModalOpen}
+          commit={commit!}
+        />
+        {allResult ? (
+          <BasicTable
+            values={allResultJson!}
+            targetColumns={targetColumns}
+            columnOnClick={(col) => {
+              setCommit(commits![col]!);
+              setIsModalOpen(true);
+            }}
+          />
+        ) : (
+          ""
+        )}
       </Box>
     );
   }

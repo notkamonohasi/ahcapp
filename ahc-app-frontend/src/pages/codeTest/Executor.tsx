@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import { Box, Button, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
@@ -9,6 +8,7 @@ import BasicTable from "../../components/BasicTable";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
+import { Commit } from "./type";
 
 const ApiUrl = process.env.REACT_APP_API_URL!;
 const ApiKey = process.env.REACT_APP_API_KEY!;
@@ -22,6 +22,8 @@ function CodeTestExecutor() {
   const contestPath = `${utils.contestsPath}/${contestName}`;
   const bucketName = awsmobile.aws_user_files_s3_bucket;
   const codePath = `${contestPath}/main.cpp`;
+  const allCodePath = `${contestPath}/allCode`;
+  const commitPath = `${contestPath}/commit.json`;
   const inPath = `${contestPath}/in`;
   const testerPath = `${contestPath}/tester.py`;
   const inputAnalyzerPath = `${contestPath}/inputAnalyzer.py`;
@@ -47,6 +49,9 @@ function CodeTestExecutor() {
     useState<boolean>(false);
   const [scores, setScores] = useState<number[] | undefined>();
   const [targetScores, setTargetScores] = useState<number[] | undefined>();
+  const [codeFile, setCodeFile] = useState<File | undefined>();
+  const [commitMessage, setCommitMessage] = useState<string>("");
+  const [lastCalcTime, setLastCalcTime] = useState<string | undefined>();
   const [inputAnalyzeResults, setInputAnalyzeResults] = useState<
     AnyObject[] | undefined
   >();
@@ -165,8 +170,8 @@ function CodeTestExecutor() {
     try {
       const result = await Storage.uploadData({ path: codePath, data: file })
         .result;
-      console.log(result);
       console.log("code upload done");
+      setCodeFile(file);
       setIsCodeUploaded(true);
     } catch (error) {
       console.log(error);
@@ -251,6 +256,9 @@ function CodeTestExecutor() {
 
   const handleCalculation = async () => {
     setIsCalculating(true);
+    const japanTime = utils.getJapanTime();
+    setLastCalcTime(japanTime);
+    var success = false;
     const result = await axios
       .get(calculationUrl, {
         headers: { "x-api-key": ApiKey },
@@ -262,8 +270,47 @@ function CodeTestExecutor() {
       .then((result) => {
         console.log(result);
         setScores(result!.data.scores!);
+        success = true;
         return result;
       });
+
+    // 保存
+    const commit: Commit = {
+      time: japanTime,
+      success: success,
+      codePath: `${allCodePath}/${japanTime}.cpp`,
+      message: "none",
+    };
+    try {
+      const codeResult = await Storage.uploadData({
+        path: commit.codePath,
+        data: codeFile!,
+      }).result;
+      console.log(codeResult);
+      var commits: Record<string, Commit> = {};
+      try {
+        const { body, eTag } = await Storage.downloadData({ path: commitPath })
+          .result;
+        commits = await JSON.parse(await body.text());
+      } catch (e) {
+        console.log(e);
+      }
+      commits[japanTime] = commit;
+      console.log(commits);
+
+      const jsonString = JSON.stringify(commits);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const file = new File([blob], "targetScore.json", {
+        type: "application/json",
+      });
+      const result = await Storage.uploadData({
+        path: commitPath,
+        data: file,
+      }).result;
+    } catch (e) {
+      console.log(e);
+    }
+
     setIsCalculating(false);
   };
 
@@ -331,18 +378,6 @@ function CodeTestExecutor() {
   const handleSaveResult = async () => {
     setIsResultSaving(true);
     console.log(scores);
-
-    const japanTime =
-      Temporal.Now.zonedDateTimeISO("UTC").withTimeZone("Asia/Tokyo");
-    const formattedJapanTime = `${String(japanTime.month).padStart(
-      2,
-      "0"
-    )}-${String(japanTime.day).padStart(2, "0")} ${String(
-      japanTime.hour
-    ).padStart(2, "0")}:${String(japanTime.minute).padStart(2, "0")}:${String(
-      japanTime.second
-    ).padStart(2, "0")}`;
-    console.log(formattedJapanTime);
     await axios
       .post(
         resultHandlerUrl,
@@ -351,7 +386,7 @@ function CodeTestExecutor() {
           inputAnalyzeResultPath,
           allResultPath,
           scores: scores,
-          colName: formattedJapanTime,
+          colName: lastCalcTime,
         },
         {
           headers: { "x-api-key": ApiKey },
@@ -718,10 +753,11 @@ function CodeTestExecutor() {
         </Typography>
         <Box
           sx={{
-            width: "50%",
+            width: "60%",
             display: "flex",
             border: "1px dashed green",
             paddingLeft: "5%",
+            paddingRight: "5%",
             gap: "10%",
           }}
         >
@@ -734,6 +770,7 @@ function CodeTestExecutor() {
                   flex: 1,
                 }}
                 onClick={handleSaveResult}
+                disabled={isResultSaving}
               >
                 {isResultSaving ? <Loader /> : "save"}
               </Button>
@@ -744,8 +781,9 @@ function CodeTestExecutor() {
                   flex: 1,
                 }}
                 onClick={handleSaveTargetResult}
+                disabled={isTargetResultSaving}
               >
-                {isTargetResultSaving ? <Loader /> : "save as target"}
+                {isTargetResultSaving ? <Loader /> : "save as baseline"}
               </Button>
             </>
           ) : undefined}

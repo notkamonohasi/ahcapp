@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,39 +9,11 @@ import TableRow from "@mui/material/TableRow";
 import React from "react";
 import { AnyObject } from "../pages/type";
 
-function createData(
-  name: string,
-  calories: number,
-  fat: number,
-  carbs: number,
-  protein: number
-) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
-  createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
-  createData("Eclair", 262, 16.0, 24, 6.0),
-  createData("Cupcake", 305, 3.7, 67, 4.3),
-  createData("Gingerbread", 356, 16.0, 49, 3.9),
-];
-
-const get_max_test_number = (scores: number[][]) => {
-  var ret: number = 0;
-  for (var i = 0; i < scores.length; i++) {
-    ret = Math.max(ret, scores[i].length);
-  }
-  return ret;
-};
-
-function* enumerate<T>(array: T[]): Generator<[number, T], void, unknown> {
-  for (let index = 0; index < array.length; index++) {
-    yield [index, array[index]];
-  }
-}
-
-const BasicTable: React.FC<{ values: AnyObject[] }> = ({ values }) => {
+const BasicTable: React.FC<{
+  values: AnyObject[];
+  targetColumns?: string[];
+  columnOnClick?: (col: string) => void;
+}> = ({ values, targetColumns, columnOnClick }) => {
   console.log(values);
   const keys = Object.keys(values[0]);
 
@@ -50,9 +23,20 @@ const BasicTable: React.FC<{ values: AnyObject[] }> = ({ values }) => {
         <TableHead>
           <TableRow>
             <TableCell>TestCase</TableCell>
-            {keys.map((key) => (
-              <TableCell align="right">{key}</TableCell>
-            ))}
+            {keys.map((key) => {
+              if (
+                targetColumns &&
+                columnOnClick &&
+                targetColumns.includes(key)
+              ) {
+                console.log(key);
+                return (
+                  <TableCell align="right">
+                    <Button onClick={() => columnOnClick(key)}>{key}</Button>
+                  </TableCell>
+                );
+              } else return <TableCell align="right">{key}</TableCell>;
+            })}
           </TableRow>
         </TableHead>
         <TableBody>
