@@ -7,7 +7,7 @@ import BasicTable from "../../components/BasicTable";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
-import AnalyzerModal from "./Modal";
+import AnalyzerModal from "./AnalyzerModal";
 import { Commit } from "./type";
 
 export interface CommitObject {
@@ -60,7 +60,7 @@ function ResultAnalyzer() {
       const csv = await body.text();
       console.log(csv);
       setAllResult(csv);
-      const json = await csv_to_json(csv!);
+      const json = await csvToJson(csv!);
       setAllResultJson(json);
     } catch (e) {
       console.log(e);
@@ -72,7 +72,7 @@ function ResultAnalyzer() {
     downloadAllResult();
   }, []);
 
-  const csv_to_json = async (s: string) => {
+  const csvToJson = async (s: string) => {
     return csvtojson()
       .fromString(s)
       .then((jsonObj) => {

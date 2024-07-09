@@ -1,3 +1,5 @@
+import { faFileAlt, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
@@ -8,6 +10,7 @@ import BasicTable from "../../components/BasicTable";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
+import BrowseModal from "./BrowseModal";
 import { Commit } from "./type";
 
 const ApiUrl = process.env.REACT_APP_API_URL!;
@@ -47,6 +50,8 @@ function CodeTestExecutor() {
   const [isResultSaving, setIsResultSaving] = useState<boolean>(false);
   const [isTargetResultSaving, setIsTargetResultSaving] =
     useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalPath, setModalPath] = useState<string | undefined>();
   const [scores, setScores] = useState<number[] | undefined>();
   const [targetScores, setTargetScores] = useState<number[] | undefined>();
   const [codeFile, setCodeFile] = useState<File | undefined>();
@@ -108,22 +113,6 @@ function CodeTestExecutor() {
     setIsTesterUploading(false);
   };
 
-  const handleTesterDownload = async () => {
-    try {
-      const { body, eTag } = await Storage.downloadData({ path: testerPath })
-        .result;
-      const url = URL.createObjectURL(await body.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "tester.py");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const handleInputAnalyzerUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -143,23 +132,6 @@ function CodeTestExecutor() {
     }
 
     setIsInputAnalyzerUploading(false);
-  };
-
-  const handleInputAnalyzerDownload = async () => {
-    try {
-      const { body, eTag } = await Storage.downloadData({
-        path: inputAnalyzerPath,
-      }).result;
-      const url = URL.createObjectURL(await body.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "inputAnalyzer.py");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.log(error);
-    }
   };
 
   const handleCodeUpload = async (
@@ -432,6 +404,11 @@ function CodeTestExecutor() {
         border: "1px dashed grey",
       }}
     >
+      <BrowseModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        path={modalPath}
+      />
       <Box
         sx={{
           width: "100%",
@@ -480,7 +457,14 @@ function CodeTestExecutor() {
                   flex: 1,
                 }}
               >
-                {isInUploading ? <Loader /> : "UPLOAD"}
+                {isInUploading ? (
+                  <Loader />
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faUpload} />
+                    &thinsp; Upload
+                  </>
+                )}
                 <input
                   type="file"
                   /* @ts-expect-error */
@@ -503,7 +487,8 @@ function CodeTestExecutor() {
                 }}
                 disabled={!isInUploaded}
               >
-                Download
+                <FontAwesomeIcon icon={faFileAlt} />
+                &thinsp; Browse
               </Button>
             </Box>
           </Box>
@@ -536,7 +521,8 @@ function CodeTestExecutor() {
                 sx={{ flex: 1 }}
                 disabled={isTesterUploading}
               >
-                Upload
+                <FontAwesomeIcon icon={faUpload} />
+                &thinsp; Upload
                 <input
                   type="file"
                   accept=".py"
@@ -548,10 +534,14 @@ function CodeTestExecutor() {
                 variant="contained"
                 component="label"
                 sx={{ flex: 1 }}
-                onClick={handleTesterDownload}
+                onClick={() => {
+                  setIsModalOpen(true);
+                  setModalPath(testerPath);
+                }}
                 disabled={!isTesterUploaded}
               >
-                Download
+                <FontAwesomeIcon icon={faFileAlt} />
+                &thinsp; Browse
               </Button>
             </Box>
           </Box>
@@ -584,7 +574,8 @@ function CodeTestExecutor() {
                 sx={{ flex: 1 }}
                 disabled={isInputAnalyzerUploading}
               >
-                Upload
+                <FontAwesomeIcon icon={faUpload} />
+                &thinsp; Upload
                 <input
                   type="file"
                   accept=".py"
@@ -596,10 +587,14 @@ function CodeTestExecutor() {
                 variant="contained"
                 component="label"
                 sx={{ flex: 1 }}
-                onClick={handleInputAnalyzerDownload}
+                onClick={() => {
+                  setIsModalOpen(true);
+                  setModalPath(inputAnalyzerPath);
+                }}
                 disabled={!isInputAnalyzerUploaded}
               >
-                Download
+                <FontAwesomeIcon icon={faFileAlt} />
+                &thinsp; Browse
               </Button>
             </Box>
           </Box>
@@ -653,7 +648,8 @@ function CodeTestExecutor() {
                 }}
               >
                 <Button variant="contained" component="label" sx={{ flex: 1 }}>
-                  UPLOAD
+                  <FontAwesomeIcon icon={faUpload} />
+                  &thinsp; UPLOAD
                   <input
                     type="file"
                     accept=".cpp"
