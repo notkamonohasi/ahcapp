@@ -1,9 +1,9 @@
 import { Loader } from "@aws-amplify/ui-react";
 import { Box } from "@mui/material";
-import * as Storage from "aws-amplify/storage";
 import csvtojson from "csvtojson";
 import { useEffect, useState } from "react";
 import BasicTable from "../../components/BasicTable";
+import { useS3Download } from "../../components/S3";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
@@ -21,61 +21,50 @@ function ResultAnalyzer() {
   const allResultPath = `${contestPath}/allResult.csv`;
   const commitPath = `${contestPath}/commit.json`;
 
-  const [allResult, setAllResult] = useState<string | undefined>();
   const [allResultJson, setAllResultJson] = useState<AnyObject[] | undefined>();
-  const [isAllResultDownloding, setIsAllResultDownloding] =
-    useState<boolean>(false);
-  const [isCommitDownloading, setIsCommitDownloading] =
-    useState<boolean>(false);
   const [commits, setCommits] = useState<CommitObject | undefined>();
   const [modalPath, setModalPath] = useState<string | undefined>();
   const [targetColumns, setTargetColumns] = useState<string[] | undefined>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  const downloadCommit = async () => {
-    setIsCommitDownloading(true);
-    var tmpCommits: CommitObject | undefined;
-    try {
-      const { body, eTag } = await Storage.downloadData({
-        path: commitPath,
-      }).result;
-      console.log(await body.text());
-      tmpCommits = await JSON.parse(await body.text());
-      console.log(tmpCommits);
-    } catch (error) {
-      console.log(error);
-    }
+  const {
+    handleS3Download: downloadCommits,
+    isS3Downloading: isCommitsDownloading,
+    text: commitsText,
+  } = useS3Download(commitPath);
+  const {
+    handleS3Download: downloadAllResult,
+    isS3Downloading: isAllResultDownloding,
+    text: allResultText,
+  } = useS3Download(allResultPath);
 
-    setCommits(tmpCommits);
-    console.log(Object.keys(tmpCommits!));
-    setTargetColumns(Object.keys(tmpCommits!));
-    console.log(targetColumns);
-
-    setIsCommitDownloading(false);
-  };
   useEffect(() => {
-    downloadCommit();
+    downloadCommits();
   }, []);
+  useEffect(() => {
+    const f = async () => {
+      if (!commitsText) return;
+      console.log(commitsText);
+      const tmpCommits = await JSON.parse(commitsText);
+      setCommits(tmpCommits);
+      console.log(tmpCommits);
+      setTargetColumns(Object.keys(tmpCommits));
+    };
+    f();
+  }, [commitsText]);
 
-  const downloadAllResult = async () => {
-    setIsAllResultDownloding(true);
-    try {
-      const { body, eTag } = await Storage.downloadData({ path: allResultPath })
-        .result;
-      const csv = await body.text();
-      console.log(csv);
-      setAllResult(csv);
-      const json = await csvToJson(csv!);
-      setAllResultJson(json);
-    } catch (e) {
-      console.log(e);
-    }
-
-    setIsAllResultDownloding(false);
-  };
   useEffect(() => {
     downloadAllResult();
   }, []);
+  useEffect(() => {
+    const f = async () => {
+      if (!allResultText) return;
+      const tmpAllResultJson = await csvToJson(allResultText!);
+      setAllResultJson(tmpAllResultJson);
+      console.log(tmpAllResultJson);
+    };
+    f();
+  }, [allResultText]);
 
   const csvToJson = async (s: string) => {
     return csvtojson()
@@ -86,12 +75,14 @@ function ResultAnalyzer() {
       });
   };
 
-  if (isAllResultDownloding || isCommitDownloading) {
+  if (isAllResultDownloding || isCommitsDownloading) {
     return (
       <Box sx={{ width: "100%", justifyContent: "center" }}>
         <Loader />
       </Box>
     );
+  } else if (!allResultJson || !commits) {
+    return <Box sx={{ width: "100%", justifyContent: "center" }}>no data</Box>;
   } else {
     return (
       <Box sx={{ width: "100%" }}>
@@ -100,18 +91,14 @@ function ResultAnalyzer() {
           setIsOpen={setIsModalOpen}
           path={modalPath}
         />
-        {allResult ? (
-          <BasicTable
-            values={allResultJson!}
-            targetColumns={targetColumns}
-            columnOnClick={(col) => {
-              setModalPath(commits![col]!.codePath);
-              setIsModalOpen(true);
-            }}
-          />
-        ) : (
-          ""
-        )}
+        <BasicTable
+          values={allResultJson!}
+          targetColumns={targetColumns}
+          columnOnClick={(col) => {
+            setModalPath(commits[col]!.codePath);
+            setIsModalOpen(true);
+          }}
+        />
       </Box>
     );
   }

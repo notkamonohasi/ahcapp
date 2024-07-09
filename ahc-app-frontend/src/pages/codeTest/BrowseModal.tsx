@@ -1,14 +1,14 @@
 import { Box, Modal, Typography } from "@mui/material";
 import React, { useEffect } from "react";
 import Loader from "react-spinners/BeatLoader";
-import { useS3Downloader } from "../../components/S3downloader";
+import { useS3Download } from "../../components/S3";
 
 const BrowseModal: React.FC<{
   isOpen: boolean;
   setIsOpen: (a: boolean) => void;
   path: string | undefined;
 }> = ({ isOpen, setIsOpen, path }) => {
-  const { handleS3Download, text, isS3Downloading } = useS3Downloader(path);
+  const { handleS3Download, text, isS3Downloading } = useS3Download(path);
 
   useEffect(() => {
     handleS3Download();

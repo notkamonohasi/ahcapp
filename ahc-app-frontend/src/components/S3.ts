@@ -1,7 +1,7 @@
 import * as Storage from "aws-amplify/storage";
 import { useState } from "react";
 
-export function useS3Downloader(path: string | undefined) {
+export function useS3Download(path: string | undefined) {
   const [isS3Downloading, setIsS3Downloading] = useState<boolean>(false);
   const [text, setText] = useState<string | undefined>();
   const [blob, setBlob] = useState<Blob | undefined>();
@@ -38,5 +38,33 @@ export function useS3Downloader(path: string | undefined) {
     isS3Downloading,
     text,
     blob,
+  };
+}
+
+export function useS3Upload(path: string) {
+  const [isS3Uploading, setIsS3Uploading] = useState<boolean>(false);
+
+  const handleS3Upload = async (file: File) => {
+    setIsS3Uploading(true);
+    var success = true;
+
+    try {
+      const result = await Storage.uploadData({
+        data: file,
+        path: path,
+      }).result;
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+      success = false;
+    }
+
+    setIsS3Uploading(false);
+    return success;
+  };
+
+  return {
+    handleS3Upload,
+    isS3Uploading,
   };
 }
