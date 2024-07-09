@@ -38,13 +38,28 @@ const BrowseModal: React.FC<{
             position: "relative",
             bgcolor: "background.paper",
             border: "2px solid #000",
-            maxWidth: "1200px",
+            maxWidth: "1000px",
             boxShadow: (theme) => theme.shadows[5],
             p: 4,
           }}
         >
-          <Typography variant="h6">{path!.split("/").at(-1)}</Typography>
-          <pre>{text}</pre>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Typography variant="h6">{path!.split("/").at(-1)}</Typography>
+            <Box
+              sx={{
+                bgcolor: "background.paper",
+                boxShadow: 24,
+                p: 4,
+                maxWidth: "80vw",
+                maxHeight: "80vh",
+                overflowX: "auto",
+                overflowY: "auto",
+                borderRadius: 1,
+              }}
+            >
+              <pre>{text}</pre>
+            </Box>
+          </Box>
         </Box>
       )}
     </Modal>

@@ -7,7 +7,7 @@ import BasicTable from "../../components/BasicTable";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
-import AnalyzerModal from "./AnalyzerModal";
+import BrowseModal from "./BrowseModal";
 import { Commit } from "./type";
 
 export interface CommitObject {
@@ -25,12 +25,15 @@ function ResultAnalyzer() {
   const [allResultJson, setAllResultJson] = useState<AnyObject[] | undefined>();
   const [isAllResultDownloding, setIsAllResultDownloding] =
     useState<boolean>(false);
+  const [isCommitDownloading, setIsCommitDownloading] =
+    useState<boolean>(false);
   const [commits, setCommits] = useState<CommitObject | undefined>();
-  const [commit, setCommit] = useState<Commit | undefined>();
+  const [modalPath, setModalPath] = useState<string | undefined>();
   const [targetColumns, setTargetColumns] = useState<string[] | undefined>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const downloadCommit = async () => {
+    setIsCommitDownloading(true);
     var tmpCommits: CommitObject | undefined;
     try {
       const { body, eTag } = await Storage.downloadData({
@@ -47,6 +50,8 @@ function ResultAnalyzer() {
     console.log(Object.keys(tmpCommits!));
     setTargetColumns(Object.keys(tmpCommits!));
     console.log(targetColumns);
+
+    setIsCommitDownloading(false);
   };
   useEffect(() => {
     downloadCommit();
@@ -81,7 +86,7 @@ function ResultAnalyzer() {
       });
   };
 
-  if (isAllResultDownloding) {
+  if (isAllResultDownloding || isCommitDownloading) {
     return (
       <Box sx={{ width: "100%", justifyContent: "center" }}>
         <Loader />
@@ -90,17 +95,17 @@ function ResultAnalyzer() {
   } else {
     return (
       <Box sx={{ width: "100%" }}>
-        <AnalyzerModal
+        <BrowseModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}
-          commit={commit!}
+          path={modalPath}
         />
         {allResult ? (
           <BasicTable
             values={allResultJson!}
             targetColumns={targetColumns}
             columnOnClick={(col) => {
-              setCommit(commits![col]!);
+              setModalPath(commits![col]!.codePath);
               setIsModalOpen(true);
             }}
           />
