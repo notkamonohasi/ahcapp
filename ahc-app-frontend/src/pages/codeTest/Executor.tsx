@@ -3,10 +3,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Button, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Loader from "react-spinners/BeatLoader";
 import awsmobile from "../../aws-exports";
 import BasicTable from "../../components/BasicTable";
+import {
+  useS3Check,
+  useS3DirUpload,
+  useS3Download,
+  useS3Upload,
+} from "../../components/S3";
 import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
@@ -33,20 +39,10 @@ function CodeTestExecutor() {
   const inputAnalyzeResultPath = `${contestPath}/inputAnalyzeResult.json`;
   const targetResultScorePath = `${contestPath}/targetResultScore.json`;
   const allResultPath = `${contestPath}/allResult.csv`;
-  const testSize = 10;
+  const testSize = 1;
 
-  const [isInUploading, setIsInUploading] = useState<boolean>(false);
-  const [isCodeUploading, setIsCodeUploading] = useState<boolean>(false);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isInputAnalyzing, setIsInputAnalyzing] = useState<boolean>(false);
-  const [isTesterUploading, setIsTesterUploading] = useState<boolean>(false);
-  const [isInputAnalyzerUploading, setIsInputAnalyzerUploading] =
-    useState<boolean>(false);
-  const [isCodeUploaded, setIsCodeUploaded] = useState<boolean>(false);
-  const [isInUploaded, setIsInUploaded] = useState<boolean>(false);
-  const [isTesterUploaded, setIsTesterUploaded] = useState<boolean>(false);
-  const [isInputAnalyzerUploaded, setIsInputAnalyzerUploaded] =
-    useState<boolean>(false);
   const [isResultSaving, setIsResultSaving] = useState<boolean>(false);
   const [isTargetResultSaving, setIsTargetResultSaving] =
     useState<boolean>(false);
@@ -54,159 +50,58 @@ function CodeTestExecutor() {
   const [modalPath, setModalPath] = useState<string | undefined>();
   const [scores, setScores] = useState<number[] | undefined>();
   const [targetScores, setTargetScores] = useState<number[] | undefined>();
-  const [codeFile, setCodeFile] = useState<File | undefined>();
   const [commitMessage, setCommitMessage] = useState<string>("");
   const [lastCalcTime, setLastCalcTime] = useState<string | undefined>();
-  const [inputAnalyzeResults, setInputAnalyzeResults] = useState<
-    AnyObject[] | undefined
-  >();
   const [mergedResult, setMergedResult] = useState<AnyObject[] | undefined>();
 
-  const handleInUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsInUploading(true);
-    const files = event.target.files!;
-
-    const f = async () => {
-      if (files.length > 3000) {
-        throw new Error("uploadするファイル数が3000個を超えています");
-      }
-      let fileSizeSum = 0;
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        fileSizeSum += file.size;
-      }
-      if (fileSizeSum > 10 * 1024 * 1024) {
-        throw new Error("uploadするファイルの合計が10MBを超えています");
-      }
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const path = `${inPath}/${file.name.split("/").at(-1)}`;
-        if (file.size > 0.1 * 1024 * 1024) {
-          throw new Error("uploadするファイルが0.1MBを超えています");
-        }
-        Storage.uploadData({ path: path, data: file });
-        console.log(path);
-      }
-    };
-    await f();
-    setIsInUploading(false);
+  const {
+    handleS3Upload: handleTesterUpload,
+    isS3Uploading: isTesterUploading,
+    isS3Uploaded: isTesterUploaded,
+  } = useS3Upload(testerPath, 1);
+  const {
+    handleS3Upload: handleInputAnalyzerUpload,
+    isS3Uploading: isInputAnalyzerUploading,
+    isS3Uploaded: isInputAnalyzerUploaded,
+  } = useS3Upload(inputAnalyzerPath, 1);
+  const {
+    handleS3Upload: handleCodeUpload,
+    isS3Uploading: isCodeUploading,
+    isS3Uploaded: isCodeUploaded,
+    file: codeFile,
+  } = useS3Upload(codePath, 3);
+  const {
+    handleS3Check: handleTesterCheck,
+    isS3Checking: isTesterChecking,
+    isS3Uploaded: isPreTesterUploaded,
+  } = useS3Check(testerPath);
+  const {
+    handleS3Check: handleInputAnalyzerCheck,
+    isS3Checking: isInputAnalyzerChecking,
+    isS3Uploaded: isPreInputAnalyzerUploaded,
+  } = useS3Check(inputAnalyzerPath);
+  const {
+    handleS3Check: handleInCheck,
+    isS3Checking: isInChecking,
+    isS3Uploaded: isPreInUploaded,
+  } = useS3Check(inPath + "/0000.txt"); // ディレクトリは探索できないので代わりを探す
+  const {
+    handleS3Upload: handleInUpload,
+    isS3Uploading: isInUploading,
+    isS3Uploaded: isInUploaded,
+  } = useS3DirUpload(inPath, 10, 3000);
+  const {
+    handleS3Download: handleInputAnalyzeResultDownload,
+    json: inputAnalyzeResults,
+  } = useS3Download(inputAnalyzeResultPath, true) as {
+    handleS3Download: () => Promise<boolean>;
+    json: AnyObject[] | undefined;
   };
 
-  const handleTesterUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setIsTesterUploading(true);
-    const file = event.target.files![0];
-
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error("uploadするファイルが10MBを超えています");
-    }
-
-    try {
-      await Storage.uploadData({ path: testerPath, data: file }).result;
-      console.log("tester upload done");
-      setIsTesterUploaded(true);
-    } catch (error) {
-      console.log(error);
-    }
-
-    setIsTesterUploading(false);
-  };
-
-  const handleInputAnalyzerUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setIsInputAnalyzerUploading(true);
-    const file = event.target.files![0];
-
-    if (file.size > 1 * 1024 * 1024) {
-      throw new Error("uploadするファイルが1MBを超えています");
-    }
-
-    try {
-      await Storage.uploadData({ path: inputAnalyzerPath, data: file }).result;
-      console.log("inputAnalyzer upload done");
-      setIsInputAnalyzerUploaded(true);
-    } catch (error) {
-      console.log(error);
-    }
-
-    setIsInputAnalyzerUploading(false);
-  };
-
-  const handleCodeUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setIsCodeUploading(true);
-    const file = event.target.files![0];
-    try {
-      const result = await Storage.uploadData({ path: codePath, data: file })
-        .result;
-      console.log("code upload done");
-      setCodeFile(file);
-      setIsCodeUploaded(true);
-    } catch (error) {
-      console.log(error);
-    }
-    setIsCodeUploading(false);
-  };
-
-  const checkIsInUploaded = async () => {
-    // FIXME: ディレクトリは探索できないので、0000.txtを探す様にする
-    try {
-      const result = await Storage.getProperties({
-        path: inPath + "/0000.txt",
-      });
-      console.log(result);
-      setIsInUploaded(true);
-    } catch {
-      setIsInUploaded(false);
-    }
-  };
   useEffect(() => {
-    checkIsInUploaded();
-  }, []);
-  const checkIsTesterUploaded = async () => {
-    try {
-      const result = await Storage.getProperties({ path: testerPath });
-      console.log(result);
-      setIsTesterUploaded(true);
-    } catch {
-      setIsTesterUploaded(false);
-    }
-  };
-  useEffect(() => {
-    checkIsTesterUploaded();
-  }, []);
-  const checkIsInputAnalyzerUploaded = async () => {
-    try {
-      const result = await Storage.getProperties({
-        path: inputAnalyzeResultPath,
-      });
-      console.log(result);
-      setIsInputAnalyzerUploaded(true);
-    } catch {
-      setIsInputAnalyzerUploaded(false);
-    }
-  };
-  useEffect(() => {
-    checkIsInputAnalyzerUploaded();
-  }, []);
-
-  const handleInputAnalyzeResultDownload = async () => {
-    try {
-      const { body, eTag } = await Storage.downloadData({
-        path: inputAnalyzeResultPath,
-      }).result;
-      console.log(await body.text());
-      const result = await JSON.parse(await body.text());
-      console.log(result);
-      setInputAnalyzeResults(result);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
+    handleTesterCheck();
+    handleInputAnalyzerCheck();
+    handleInCheck();
     handleInputAnalyzeResultDownload();
   }, []);
 
@@ -388,7 +283,6 @@ function CodeTestExecutor() {
       }).result;
       console.log(result);
       console.log("code upload done");
-      setIsCodeUploaded(true);
     } catch (error) {
       console.log(error);
     }
@@ -485,7 +379,7 @@ function CodeTestExecutor() {
                 onClick={() => {
                   alert("未対応");
                 }}
-                disabled={!isInUploaded}
+                disabled={!isPreInUploaded && !isInUploaded}
               >
                 <FontAwesomeIcon icon={faFileAlt} />
                 &thinsp; Browse
@@ -538,7 +432,7 @@ function CodeTestExecutor() {
                   setIsModalOpen(true);
                   setModalPath(testerPath);
                 }}
-                disabled={!isTesterUploaded}
+                disabled={!isPreTesterUploaded && !isTesterUploaded}
               >
                 <FontAwesomeIcon icon={faFileAlt} />
                 &thinsp; Browse
@@ -591,7 +485,9 @@ function CodeTestExecutor() {
                   setIsModalOpen(true);
                   setModalPath(inputAnalyzerPath);
                 }}
-                disabled={!isInputAnalyzerUploaded}
+                disabled={
+                  !isPreInputAnalyzerUploaded && !isInputAnalyzerUploaded
+                }
               >
                 <FontAwesomeIcon icon={faFileAlt} />
                 &thinsp; Browse
@@ -721,9 +617,9 @@ function CodeTestExecutor() {
                   }}
                   onClick={handleExecInputAnalyze}
                   disabled={
-                    !isTesterUploaded ||
+                    (!isTesterUploaded && !isPreTesterUploaded) ||
                     isTesterUploading ||
-                    !isInputAnalyzerUploaded ||
+                    (!isInputAnalyzerUploaded && !isPreInputAnalyzerUploaded) ||
                     isInputAnalyzerUploading ||
                     isInputAnalyzing
                   }
