@@ -1,6 +1,6 @@
 import { faFileAlt, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -19,8 +19,11 @@ import * as utils from "../utils";
 import BrowseModal from "./BrowseModal";
 import { Commit } from "./type";
 
+const DEFAULT_TEST_SIZE = 10;
+
 const ApiUrl = process.env.REACT_APP_API_URL!;
 const ApiKey = process.env.REACT_APP_API_KEY!;
+
 const calculationUrl = `${ApiUrl}/Exec`;
 const inputAnalyzerUrl = `${ApiUrl}/InputAnalyzer`;
 const resultHandlerUrl = `${ApiUrl}/ResultHandler`;
@@ -39,7 +42,6 @@ function CodeTestExecutor() {
   const inputAnalyzeResultPath = `${contestPath}/inputAnalyzeResult.json`;
   const targetResultScorePath = `${contestPath}/targetResultScore.json`;
   const allResultPath = `${contestPath}/allResult.csv`;
-  const testSize = 1;
 
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isInputAnalyzing, setIsInputAnalyzing] = useState<boolean>(false);
@@ -48,6 +50,8 @@ function CodeTestExecutor() {
     useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalPath, setModalPath] = useState<string | undefined>();
+
+  const [testSize, setTestSize] = useState<number>(DEFAULT_TEST_SIZE);
   const [scores, setScores] = useState<number[] | undefined>();
   const [targetScores, setTargetScores] = useState<number[] | undefined>();
   const [commitMessage, setCommitMessage] = useState<string>("");
@@ -289,6 +293,8 @@ function CodeTestExecutor() {
     setIsTargetResultSaving(false);
   };
 
+  if (isInChecking || isTesterChecking || isInputAnalyzerChecking)
+    return <Loader />;
   return (
     <Box
       sx={{
@@ -518,7 +524,7 @@ function CodeTestExecutor() {
           <Box
             sx={{
               textAlign: "center",
-              width: "50%",
+              width: "66.66%",
               display: "flex",
               flexDirection: "column",
               border: "1px dashed grey",
@@ -536,11 +542,22 @@ function CodeTestExecutor() {
                 border: "1px dashed green",
               }}
             >
+              <TextField
+                value={testSize}
+                type="number"
+                label="testSize"
+                onChange={(event) => setTestSize(Number(event.target.value))}
+                InputProps={{
+                  style: {
+                    height: "40px",
+                  },
+                }}
+              />
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "row",
-                  minWidth: "33.33%",
+                  minWidth: "25%",
                 }}
               >
                 <Button variant="contained" component="label" sx={{ flex: 1 }}>
@@ -559,7 +576,7 @@ function CodeTestExecutor() {
                 sx={{
                   display: "flex",
                   flexDirection: "row",
-                  minWidth: "33.33%",
+                  minWidth: "25%",
                 }}
               >
                 <Button
@@ -585,7 +602,7 @@ function CodeTestExecutor() {
           <Box
             sx={{
               textAlign: "center",
-              width: "50%",
+              width: "33.33%",
               display: "flex",
               flexDirection: "column",
               border: "1px dashed grey",
@@ -600,6 +617,7 @@ function CodeTestExecutor() {
                 flexDirection: "row",
                 justifyContent: "center",
                 border: "1px dashed green",
+                height: "100%",
               }}
             >
               <Box
