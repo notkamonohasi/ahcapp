@@ -1,3 +1,4 @@
+import { Box, Container } from "@mui/material";
 import CodeTestHome from "./pages/codeTest/Home";
 import Header from "./pages/Header";
 import Home from "./pages/Home";
@@ -19,12 +20,41 @@ function Router() {
 
 function App() {
   return (
-    <>
-      <Header />
-      <div className="container">
-        <Router />
-      </div>
-    </>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        marginRight: "10px",
+      }}
+    >
+      <Box sx={{ height: "60px" }}>
+        <Header />
+      </Box>
+      <Container
+        sx={{
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          sx={{
+            width: "1100px",
+            minHeight: "100vh",
+            paddingTop: "30px",
+            paddingLeft: "5%",
+            paddingRight: "5%",
+            paddingBottom: "50px",
+            display: "flex",
+            backgroundColor: "white",
+            boxShadow: "0px 0px 20px rgba(0, 0, 0, 1.0)", // atcoder.jp
+          }}
+        >
+          <Router />
+        </Box>
+      </Container>
+    </Box>
   );
 }
 

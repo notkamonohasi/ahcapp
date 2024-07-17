@@ -301,7 +301,6 @@ function CodeTestExecutor() {
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        border: "1px dashed grey",
       }}
     >
       <BrowseModal
@@ -314,7 +313,6 @@ function CodeTestExecutor() {
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          border: "1px dashed blue",
         }}
       >
         <Typography variant="h5" gutterBottom>
@@ -324,7 +322,6 @@ function CodeTestExecutor() {
           sx={{
             display: "flex",
             flexDirection: "row",
-            border: "1px dashed grey",
           }}
         >
           <Box
@@ -333,7 +330,6 @@ function CodeTestExecutor() {
               width: "33.33%",
               display: "flex",
               flexDirection: "column",
-              border: "1px dashed grey",
             }}
           >
             <Typography variant="h6" gutterBottom>
@@ -347,7 +343,6 @@ function CodeTestExecutor() {
                 gap: "5%",
                 paddingLeft: "10%",
                 paddingRight: "10%",
-                border: "1px dashed grey",
               }}
             >
               <Button
@@ -398,7 +393,6 @@ function CodeTestExecutor() {
               textAlign: "center",
               width: "33.33%",
               flexDirection: "column",
-              border: "1px dashed grey",
             }}
           >
             <Typography variant="h6" gutterBottom>
@@ -412,7 +406,6 @@ function CodeTestExecutor() {
                 gap: "5%",
                 paddingLeft: "10%",
                 paddingRight: "10%",
-                border: "1px dashed grey",
               }}
             >
               <Button
@@ -451,7 +444,6 @@ function CodeTestExecutor() {
               width: "33.33%",
               display: "flex",
               flexDirection: "column",
-              border: "1px dashed grey",
             }}
           >
             <Typography variant="h6" gutterBottom>
@@ -465,7 +457,6 @@ function CodeTestExecutor() {
                 gap: "5%",
                 paddingLeft: "10%",
                 paddingRight: "10%",
-                border: "1px dashed grey",
               }}
             >
               <Button
@@ -507,7 +498,6 @@ function CodeTestExecutor() {
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          border: "1px dashed blue",
           paddingTop: "50px",
         }}
       >
@@ -518,7 +508,6 @@ function CodeTestExecutor() {
           sx={{
             display: "flex",
             flexDirection: "row",
-            border: "1px dashed grey",
           }}
         >
           <Box
@@ -527,7 +516,6 @@ function CodeTestExecutor() {
               width: "66.66%",
               display: "flex",
               flexDirection: "column",
-              border: "1px dashed grey",
             }}
           >
             <Typography variant="h6" gutterBottom>
@@ -539,7 +527,6 @@ function CodeTestExecutor() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                border: "1px dashed green",
               }}
             >
               <TextField
@@ -605,7 +592,6 @@ function CodeTestExecutor() {
               width: "33.33%",
               display: "flex",
               flexDirection: "column",
-              border: "1px dashed grey",
             }}
           >
             <Typography variant="h6" gutterBottom>
@@ -616,7 +602,6 @@ function CodeTestExecutor() {
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "center",
-                border: "1px dashed green",
                 height: "100%",
               }}
             >
@@ -654,7 +639,6 @@ function CodeTestExecutor() {
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          border: "1px dashed blue",
           paddingTop: "50px",
         }}
       >
@@ -665,7 +649,6 @@ function CodeTestExecutor() {
           sx={{
             width: "60%",
             display: "flex",
-            border: "1px dashed green",
             paddingLeft: "5%",
             paddingRight: "5%",
             gap: "10%",
@@ -702,7 +685,6 @@ function CodeTestExecutor() {
           sx={{
             width: "100%",
             display: "flex",
-            border: "1px dashed green",
             paddingLeft: "5%",
             paddingRight: "5%",
             paddingTop: "5px",
