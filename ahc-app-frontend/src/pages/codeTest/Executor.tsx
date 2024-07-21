@@ -1,6 +1,6 @@
 import { faFileAlt, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, Switch, TextField, Typography } from "@mui/material";
 import * as Storage from "aws-amplify/storage";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -37,11 +37,13 @@ function CodeTestExecutor() {
   const allCodePath = `${contestPath}/allCode`;
   const commitPath = `${contestPath}/commit.json`;
   const inPath = `${contestPath}/in`;
-  const testerPath = `${contestPath}/tester.py`;
+  const testerPath = `${contestPath}/tester`;
   const inputAnalyzerPath = `${contestPath}/inputAnalyzer.py`;
   const inputAnalyzeResultPath = `${contestPath}/inputAnalyzeResult.json`;
   const targetResultScorePath = `${contestPath}/targetResultScore.json`;
   const allResultPath = `${contestPath}/allResult.csv`;
+
+  const [isInteractive, setIsInteractive] = useState<boolean>(false);
 
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isInputAnalyzing, setIsInputAnalyzing] = useState<boolean>(false);
@@ -62,7 +64,7 @@ function CodeTestExecutor() {
     handleS3Upload: handleTesterUpload,
     isS3Uploading: isTesterUploading,
     isS3Uploaded: isTesterUploaded,
-  } = useS3Upload(testerPath, 1);
+  } = useS3Upload(testerPath, 3);
   const {
     handleS3Upload: handleInputAnalyzerUpload,
     isS3Uploading: isInputAnalyzerUploading,
@@ -133,7 +135,14 @@ function CodeTestExecutor() {
     const result = await axios
       .get(calculationUrl, {
         headers: { "x-api-key": ApiKey },
-        params: { bucketName, codePath, inPath, testerPath, testSize },
+        params: {
+          bucketName,
+          codePath,
+          inPath,
+          testerPath,
+          testSize,
+          isInteractive,
+        },
       })
       .catch((error) => {
         console.log(error);
@@ -416,20 +425,14 @@ function CodeTestExecutor() {
               >
                 <FontAwesomeIcon icon={faUpload} />
                 &thinsp; Upload
-                <input
-                  type="file"
-                  accept=".py"
-                  hidden
-                  onChange={handleTesterUpload}
-                />
+                <input type="file" hidden onChange={handleTesterUpload} />
               </Button>
               <Button
                 variant="contained"
                 component="label"
                 sx={{ flex: 1 }}
                 onClick={() => {
-                  setIsModalOpen(true);
-                  setModalPath(testerPath);
+                  alert("binaryです");
                 }}
                 disabled={!isPreTesterUploaded && !isTesterUploaded}
               >
@@ -513,7 +516,7 @@ function CodeTestExecutor() {
           <Box
             sx={{
               textAlign: "center",
-              width: "66.66%",
+              width: "75%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -529,6 +532,20 @@ function CodeTestExecutor() {
                 gap: "5%",
               }}
             >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Switch
+                  checked={isInteractive}
+                  onChange={(event) => setIsInteractive(event.target.checked)}
+                />
+                <Typography>Interactive</Typography>
+              </Box>
               <TextField
                 value={testSize}
                 type="number"
@@ -545,6 +562,7 @@ function CodeTestExecutor() {
                   display: "flex",
                   flexDirection: "row",
                   minWidth: "25%",
+                  height: "40px",
                 }}
               >
                 <Button variant="contained" component="label" sx={{ flex: 1 }}>
@@ -564,6 +582,7 @@ function CodeTestExecutor() {
                   display: "flex",
                   flexDirection: "row",
                   minWidth: "25%",
+                  height: "40px",
                 }}
               >
                 <Button
@@ -609,7 +628,8 @@ function CodeTestExecutor() {
                 sx={{
                   display: "flex",
                   flexDirection: "row",
-                  minWidth: "33.33%",
+                  minWidth: "50%",
+                  height: "40px",
                 }}
               >
                 <Button

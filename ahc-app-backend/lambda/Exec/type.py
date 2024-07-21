@@ -14,6 +14,7 @@ class Body(TypedDict):
     inPath: str
     testerPath: str
     testSize: int
+    isInteractive: bool
 
 
 class Params(TypedDict):
@@ -21,3 +22,4 @@ class Params(TypedDict):
     binaryPath: str
     inPath: str
     testerPath: str
+    isInteractive: bool

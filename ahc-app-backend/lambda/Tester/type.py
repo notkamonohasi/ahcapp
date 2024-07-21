@@ -13,3 +13,4 @@ class Body(TypedDict):
     binaryPath: str
     inPath: str
     testerPath: str
+    isInteractive: str
