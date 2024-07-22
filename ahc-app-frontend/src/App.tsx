@@ -24,7 +24,6 @@ function App() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        marginRight: "10px",
       }}
     >
       <Box sx={{ height: "60px" }}>
