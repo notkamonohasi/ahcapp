@@ -15,7 +15,6 @@ lambda_client = boto3.client("lambda")
 
 HEADERS = {
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
 }
 TESTER_ARN_SSM_PATH = "/ahcapp/testerArn"
 

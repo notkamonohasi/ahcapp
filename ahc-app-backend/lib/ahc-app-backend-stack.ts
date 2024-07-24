@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { createApi } from "./createApi";
 import { Exec } from "./exec";
 import { InputAnalyzer } from "./inputAnalyzer";
+import { Presign } from "./presign";
 import { ResuleHandler } from "./resuletHandler";
 import { Tester } from "./tester";
 
@@ -16,10 +17,17 @@ export class AhcAppBackendStack extends cdk.Stack {
       this,
       "Exec",
       [tester.testerFunctionArn, tester.testerArnSsmArn],
-      api,
       props
     );
     const inputAnalyzer = new InputAnalyzer(this, "InputAnalyzer", api, props);
     const resultHandler = new ResuleHandler(this, "ResultHandler", api, props);
+    const presign = new Presign(
+      this,
+      "Presign",
+      [exec.lambdaFunctionUrlArn],
+      [exec.lambdaFunctionUrlSsmArn],
+      api,
+      props
+    );
   }
 }

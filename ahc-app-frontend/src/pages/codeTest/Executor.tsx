@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Loader from "react-spinners/BeatLoader";
 import awsmobile from "../../aws-exports";
 import BasicTable from "../../components/BasicTable";
+import { presignLambdaGet } from "../../components/Lambda";
 import {
   useS3Check,
   useS3DirUpload,
@@ -131,28 +132,18 @@ function CodeTestExecutor() {
     setIsCalculating(true);
     const japanTime = utils.getJapanTime();
     setLastCalcTime(japanTime);
-    var success = false;
-    const result = await axios
-      .get(calculationUrl, {
-        headers: { "x-api-key": ApiKey },
-        params: {
-          bucketName,
-          codePath,
-          inPath,
-          testerPath,
-          testSize,
-          isInteractive,
-        },
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .then((result) => {
-        console.log(result);
-        setScores(result!.data.scores!);
-        success = true;
-        return result;
-      });
+    const result = await presignLambdaGet("Exec", {
+      bucketName,
+      codePath,
+      inPath,
+      testerPath,
+      testSize,
+      isInteractive,
+    });
+    setIsCalculating(false);
+
+    const success = result.success;
+    if (success === true) setScores(result.result!.scores!);
 
     // 保存
     const commit: Commit = {
@@ -190,8 +181,6 @@ function CodeTestExecutor() {
     } catch (e) {
       console.log(e);
     }
-
-    setIsCalculating(false);
   };
 
   const mergeResult = async () => {

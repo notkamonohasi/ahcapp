@@ -1,17 +1,21 @@
 import * as cdk from "aws-cdk-lib";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 import { config } from "./config";
+import { getAllowedOrigins } from "./cors";
 import { createLambdaFunctionFromDocker } from "./createLambda";
 
 export class Exec extends Construct {
+  public readonly lambdaFunctionUrlArn: string;
+  public readonly lambdaFunctionUrlSsmArn: string;
+
   constructor(
     scope: Construct,
     id: string,
     arns: string[],
-    api: apigateway.RestApi,
     props?: cdk.StackProps
   ) {
     super(scope, id);
@@ -25,12 +29,15 @@ export class Exec extends Construct {
       "develop"
     );
 
-    const resource = api.root.addResource("Exec");
-    resource.addMethod(
-      "GET",
-      new apigateway.LambdaIntegration(lambdaFunction),
-      { apiKeyRequired: true }
-    );
+    // 関数URL
+    const lambdaFunctionUrl = lambdaFunction.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.AWS_IAM,
+      cors: {
+        allowedOrigins: getAllowedOrigins(props),
+        allowedHeaders: ["*"],
+      },
+    });
+    this.lambdaFunctionUrlArn = lambdaFunctionUrl.functionArn;
 
     const bucket = s3.Bucket.fromBucketName(this, "Bucket", config.bucketName);
     bucket.grantReadWrite(lambdaFunction);
@@ -43,5 +50,15 @@ export class Exec extends Construct {
         resources: arns,
       })
     );
+
+    const lambdaFunctionUrlSsm = new ssm.StringParameter(
+      this,
+      "ExecLambdaFunctionUrl",
+      {
+        parameterName: `/ahcapp/exec`,
+        stringValue: lambdaFunctionUrl.url,
+      }
+    );
+    this.lambdaFunctionUrlSsmArn = lambdaFunctionUrlSsm.parameterArn;
   }
 }
