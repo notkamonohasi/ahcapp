@@ -29,6 +29,7 @@ def lambda_handler(event, _) -> HTTPResponce:
     print(event)
 
     body: Body = event["queryStringParameters"]
+    print(f"{body=}")
 
     code_path = TMP_DIR.joinpath("main.cpp")
 
@@ -99,6 +100,7 @@ def lambda_handler(event, _) -> HTTPResponce:
             "inPath": str(Path(body["inPath"]).joinpath(f"{str(n).zfill(4)}.txt")),
             "testerPath": body["testerPath"],
             "isInteractive": body["isInteractive"],
+            "timeLimit": body["timeLimit"],
         }
         raw_res = lambda_client.invoke(
             FunctionName=tester_arn, Payload=json.dumps(params)

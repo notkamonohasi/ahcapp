@@ -1,5 +1,8 @@
 import json
 import os
+import subprocess
+import threading
+from typing import Callable, Final
 
 import boto3
 from const import TMP_DIR
@@ -50,11 +53,39 @@ def lambda_handler(event, _) -> HTTPResponce:
     os.chmod(binary_path, 0o755)
     os.chmod(in_path, 0o755)
 
+    def run_with_timeout(cmd: str, timeout: float) -> int:
+        def target():
+            try:
+                result["returncode"] = subprocess.run(
+                    cmd, shell=True, check=True, capture_output=True
+                ).returncode
+            except subprocess.CalledProcessError as e:
+                result["error"] = e
+
+        result = {}  # type: ignore
+        thread = threading.Thread(target=target)
+        thread.start()
+        thread.join(timeout)
+
+        if thread.is_alive():
+            # Timeout reached; terminate the process
+            subprocess.run(f'pkill -f "{cmd}"', shell=True)
+            thread.join()
+            raise Exception("Function execution exceeded the time limit")
+
+        if "error" in result:
+            raise result["error"]
+
+        print(f"{result=}")
+        return result["returncode"]
+
     def read_score() -> int:
         """
         `score_path`からscoreを読み取る
         """
         print("read score")
+        with open(score_path, "r") as f:
+            print(f.readlines())
         with open(score_path, "r") as f:
             score = int(f.readline().replace("\n", "").split(" ")[-1])
             print(f"{score=}")
@@ -65,8 +96,9 @@ def lambda_handler(event, _) -> HTTPResponce:
     if body["isInteractive"] == "false":
         print("non interactive")
         try:
-            os.chmod(binary_path, 0o755)
-            exec_result = os.system(f"{binary_path} < {in_path} > {out_path}")
+            command = f"{binary_path} < {in_path} > {out_path}"
+            print(f"{command=}")
+            exec_result = run_with_timeout(command, float(body["timeLimit"]) + 1.0)
             assert exec_result == 0
         except Exception as e:
             message = {"abstract": "execution error", "message": str(e)}
@@ -100,11 +132,16 @@ def lambda_handler(event, _) -> HTTPResponce:
         # cargo run -r --bin tester ./tmp_main < in/${i}.txt > out/${i}.txt 2> hoge.txt
         print("interactive")
         try:
-            test_result = os.system(
+            command = (
                 f"{tester_path} {binary_path} < {in_path} > {out_path} 2> {score_path}"
             )
+            print(f"{command=}")
+            timeLimit = float(body["timeLimit"]) + 1.0
+            print(f"{timeLimit=}")
+            exec_result = run_with_timeout(command, timeLimit)
+            print(f"{exec_result=}")
+            assert exec_result == 0
             score = read_score()
-            assert test_result == 0
         except Exception as e:
             message = {"abstract": "test error", "message": str(e)}
             print(message)

@@ -14,3 +14,4 @@ class Body(TypedDict):
     inPath: str
     testerPath: str
     isInteractive: str
+    timeLimit: float

@@ -15,6 +15,7 @@ class Body(TypedDict):
     testerPath: str
     testSize: int
     isInteractive: bool
+    timeLimit: float
 
 
 class Params(TypedDict):
@@ -23,3 +24,4 @@ class Params(TypedDict):
     inPath: str
     testerPath: str
     isInteractive: bool
+    timeLimit: float

@@ -139,6 +139,7 @@ function CodeTestExecutor() {
       testerPath,
       testSize,
       isInteractive,
+      timeLimit: 2.5,
     });
     setIsCalculating(false);
 
