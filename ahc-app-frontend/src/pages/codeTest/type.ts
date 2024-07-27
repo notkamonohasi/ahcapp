@@ -4,3 +4,9 @@ export interface Commit {
   codePath: string;
   message: string;
 }
+
+export interface ContestParams {
+  isInteractive: boolean;
+  timeLimit: number;
+  testSize: number;
+}

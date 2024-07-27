@@ -18,14 +18,13 @@ import "../style.css";
 import { AnyObject } from "../type";
 import * as utils from "../utils";
 import BrowseModal from "./BrowseModal";
-import { Commit } from "./type";
+import { Commit, ContestParams } from "./type";
 
 const DEFAULT_TEST_SIZE = 10;
 
 const ApiUrl = process.env.REACT_APP_API_URL!;
 const ApiKey = process.env.REACT_APP_API_KEY!;
 
-const calculationUrl = `${ApiUrl}/Exec`;
 const inputAnalyzerUrl = `${ApiUrl}/InputAnalyzer`;
 const resultHandlerUrl = `${ApiUrl}/ResultHandler`;
 
@@ -37,6 +36,7 @@ function CodeTestExecutor() {
   const codePath = `${contestPath}/main.cpp`;
   const allCodePath = `${contestPath}/allCode`;
   const commitPath = `${contestPath}/commit.json`;
+  const contestParamsPath = `${contestPath}/contestParams.json`;
   const inPath = `${contestPath}/in`;
   const testerPath = `${contestPath}/tester`;
   const inputAnalyzerPath = `${contestPath}/inputAnalyzer.py`;
@@ -45,6 +45,9 @@ function CodeTestExecutor() {
   const allResultPath = `${contestPath}/allResult.csv`;
 
   const [isInteractive, setIsInteractive] = useState<boolean>(false);
+  const [timeLimit, setTimeLimit] = useState<number>(2.0);
+  const [isContestParamsDownloading, setIsContestParamsDownloading] =
+    useState<boolean>(false);
 
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isInputAnalyzing, setIsInputAnalyzing] = useState<boolean>(false);
@@ -110,7 +113,27 @@ function CodeTestExecutor() {
     handleInputAnalyzerCheck();
     handleInCheck();
     handleInputAnalyzeResultDownload();
+    handleDownloadContestParams();
   }, []);
+
+  const handleDownloadContestParams = async () => {
+    setIsContestParamsDownloading(true);
+    try {
+      const { body, eTag } = await Storage.downloadData({
+        path: contestParamsPath,
+      }).result;
+      const contestParams = (await JSON.parse(
+        await body.text()
+      )) as ContestParams;
+      console.log(contestParams);
+      setIsInteractive(contestParams.isInteractive);
+      setTimeLimit(contestParams.timeLimit);
+      setTestSize(contestParams.testSize);
+    } catch (e) {
+      console.log(e);
+    }
+    setIsContestParamsDownloading(false);
+  };
 
   const handleTargetScoreDownload = async () => {
     try {
@@ -139,7 +162,7 @@ function CodeTestExecutor() {
       testerPath,
       testSize,
       isInteractive,
-      timeLimit: 2.5,
+      timeLimit,
     });
     setIsCalculating(false);
 
@@ -179,6 +202,20 @@ function CodeTestExecutor() {
         path: commitPath,
         data: file,
       }).result;
+    } catch (e) {
+      console.log(e);
+    }
+
+    try {
+      const contestParams = {
+        isInteractive,
+        timeLimit,
+        testSize,
+      };
+      const blob = new Blob([JSON.stringify(contestParams)], {
+        type: "application/json",
+      });
+      await Storage.uploadData({ path: contestParamsPath, data: blob }).result;
     } catch (e) {
       console.log(e);
     }
@@ -292,7 +329,12 @@ function CodeTestExecutor() {
     setIsTargetResultSaving(false);
   };
 
-  if (isInChecking || isTesterChecking || isInputAnalyzerChecking)
+  if (
+    isInChecking ||
+    isTesterChecking ||
+    isInputAnalyzerChecking ||
+    isContestParamsDownloading
+  )
     return <Loader />;
   return (
     <Box
@@ -315,18 +357,19 @@ function CodeTestExecutor() {
         }}
       >
         <Typography variant="h5" gutterBottom>
-          Commons
+          Settings
         </Typography>
         <Box
           sx={{
             display: "flex",
             flexDirection: "row",
+            gap: "3%",
           }}
         >
           <Box
             sx={{
               textAlign: "center",
-              width: "33.33%",
+              width: "15%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -340,8 +383,6 @@ function CodeTestExecutor() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                paddingLeft: "10%",
-                paddingRight: "10%",
               }}
             >
               <Button
@@ -370,27 +411,13 @@ function CodeTestExecutor() {
                   disabled={isInUploading}
                 />
               </Button>
-              <Button
-                variant="contained"
-                component="label"
-                sx={{
-                  flex: 1,
-                }}
-                onClick={() => {
-                  alert("未対応");
-                }}
-                disabled={!isPreInUploaded && !isInUploaded}
-              >
-                <FontAwesomeIcon icon={faFileAlt} />
-                &thinsp; Browse
-              </Button>
             </Box>
           </Box>
           <Box
             sx={{
               display: "flex",
               textAlign: "center",
-              width: "33.33%",
+              width: "15%",
               flexDirection: "column",
             }}
           >
@@ -403,8 +430,6 @@ function CodeTestExecutor() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                paddingLeft: "10%",
-                paddingRight: "10%",
               }}
             >
               <Button
@@ -417,24 +442,12 @@ function CodeTestExecutor() {
                 &thinsp; Upload
                 <input type="file" hidden onChange={handleTesterUpload} />
               </Button>
-              <Button
-                variant="contained"
-                component="label"
-                sx={{ flex: 1 }}
-                onClick={() => {
-                  alert("binaryです");
-                }}
-                disabled={!isPreTesterUploaded && !isTesterUploaded}
-              >
-                <FontAwesomeIcon icon={faFileAlt} />
-                &thinsp; Browse
-              </Button>
             </Box>
           </Box>
           <Box
             sx={{
               textAlign: "center",
-              width: "33.33%",
+              width: "30%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -448,8 +461,8 @@ function CodeTestExecutor() {
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: "5%",
-                paddingLeft: "10%",
-                paddingRight: "10%",
+                paddingLeft: "3%",
+                paddingRight: "3%",
               }}
             >
               <Button
@@ -484,11 +497,69 @@ function CodeTestExecutor() {
               </Button>
             </Box>
           </Box>
+          <Box
+            sx={{
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Params
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: "5%",
+                paddingLeft: "10%",
+                paddingRight: "10%",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Switch
+                  checked={isInteractive}
+                  onChange={(event) => setIsInteractive(event.target.checked)}
+                />
+                <Typography>Interactive</Typography>
+              </Box>
+              <TextField
+                value={timeLimit}
+                type="number"
+                label="TL[s]"
+                onChange={(event) => setTimeLimit(Number(event.target.value))}
+                InputProps={{
+                  style: {
+                    height: "40px",
+                  },
+                }}
+              />
+              <TextField
+                value={testSize}
+                type="number"
+                label="testSize"
+                onChange={(event) => setTestSize(Number(event.target.value))}
+                InputProps={{
+                  style: {
+                    height: "40px",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
         </Box>
       </Box>
       <Box
         sx={{
-          width: "100%",
+          width: "50%",
           display: "flex",
           flexDirection: "column",
           paddingTop: "50px",
@@ -501,12 +572,13 @@ function CodeTestExecutor() {
           sx={{
             display: "flex",
             flexDirection: "row",
+            gap: "10%",
           }}
         >
           <Box
             sx={{
               textAlign: "center",
-              width: "75%",
+              width: "60%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -525,34 +597,10 @@ function CodeTestExecutor() {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Switch
-                  checked={isInteractive}
-                  onChange={(event) => setIsInteractive(event.target.checked)}
-                />
-                <Typography>Interactive</Typography>
-              </Box>
-              <TextField
-                value={testSize}
-                type="number"
-                label="testSize"
-                onChange={(event) => setTestSize(Number(event.target.value))}
-                InputProps={{
-                  style: {
-                    height: "40px",
-                  },
-                }}
-              />
-              <Box
-                sx={{
-                  display: "flex",
                   flexDirection: "row",
                   minWidth: "25%",
                   height: "40px",
+                  flex: 1,
                 }}
               >
                 <Button variant="contained" component="label" sx={{ flex: 1 }}>
@@ -573,6 +621,7 @@ function CodeTestExecutor() {
                   flexDirection: "row",
                   minWidth: "25%",
                   height: "40px",
+                  flex: 1,
                 }}
               >
                 <Button
@@ -598,7 +647,7 @@ function CodeTestExecutor() {
           <Box
             sx={{
               textAlign: "center",
-              width: "33.33%",
+              width: "40%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -618,7 +667,7 @@ function CodeTestExecutor() {
                 sx={{
                   display: "flex",
                   flexDirection: "row",
-                  minWidth: "50%",
+                  minWidth: "80%",
                   height: "40px",
                 }}
               >

@@ -39,7 +39,7 @@ function App() {
       >
         <Box
           sx={{
-            width: "1100px",
+            width: "1150px",
             minHeight: "100vh",
             paddingTop: "30px",
             paddingLeft: "5%",
